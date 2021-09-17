@@ -1,19 +1,9 @@
 package com.example.myapplication
 
-import android.content.Context
-import android.os.BatteryManager
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.room.Room
-import com.example.myapplication.BatteryLevelCharge.AppDatabase
-import com.example.myapplication.BatteryLevelCharge.BatteryLevelCharge
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
-
+import com.example.myapplication.BatteryLevelCharge.BatteryLevelChargeService
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,31 +11,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        writeInDB()
-    }
+        val serviceClass = BatteryLevelChargeService::class.java
+        val intent = Intent(this, serviceClass)
 
-    private fun writeInDB() {
-        val instance = this
-        val db = Room.databaseBuilder(instance, AppDatabase::class.java, "database-batterycharge").allowMainThreadQueries().build()
-        val batteryLevelChargeDao = db.batteryLevelChargeDao()
-
-        MainScope().launch {
-            while (true) {
-                var percentage: Int = 1000
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    val bm = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-                    percentage = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-                }
-
-                val currentDate = SimpleDateFormat("dd/M/yyyy hh:mm:ss").format(Date())
-
-                val batteryLevelCharge = BatteryLevelCharge(currentDate, percentage)
-                batteryLevelChargeDao.insert(batteryLevelCharge)
-
-                delay(10000L)
-
-                Log.d("!!!", "${batteryLevelCharge.date} : ${batteryLevelCharge.batteryLevel}")
-            }
-        }
+        startService(intent)
     }
 }
